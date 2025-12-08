@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lusthaben</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+      "jsm/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="root">
+    <canvas id="c"></canvas>
+  </div>
+
+  <!-- Fullscreen modal overlay (starts hidden) -->
+  <div id="modal" aria-hidden="true">
+    <div id="modal-content"></div>
+    <button id="modal-close" aria-label="Close modal">Close</button>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
