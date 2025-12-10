@@ -15,6 +15,17 @@ const hS = 1.5;
 const cS = 1.9;
 const nScale = 2;
 
+// Background audio
+const bgAudio = new Audio("./audio/LUSTHABEN Sonic Pi Audio/Ambient Melody.wav");
+bgAudio.currentTime = 1;
+bgAudio.loop = true;       // loops continuously
+bgAudio.volume = 0.8;      // adjust as needed
+bgAudio.play().catch(err => console.log("Autoplay blocked, will play on first user interaction"));
+
+window.addEventListener("click", () => {
+  bgAudio.play();
+}, { once: true });
+
 // material
 const mirrorMaterial_dark = new THREE.MeshPhysicalMaterial({
   color: 0xffffff,
@@ -104,15 +115,15 @@ function applyInteractionRecursively(obj, modalId, baseScale = bS, hoverScale = 
 // --------------------------------------------------
 
 createPointer(manager.scene, manager.camera, canvas, {
-    onClick(obj) {
-        obj.userData?.interactable && obj.userData.onClick?.();
-    },
-    onHoverEnter(obj) {
-        obj.userData?.interactable && obj.userData.onHoverEnter?.();
-    },
-    onHoverExit(obj) {
-        obj.userData?.interactable && obj.userData.onHoverExit?.();
-    }
+  onClick(obj) {
+      obj.userData?.interactable && obj.userData.onClick?.();
+  },
+  onHoverEnter(obj) {
+      obj.userData?.interactable && obj.userData.onHoverEnter?.();
+  },
+  onHoverExit(obj) {
+      obj.userData?.interactable && obj.userData.onHoverExit?.();
+  }
 });
 
 // --------------------------------------------------
@@ -276,6 +287,30 @@ loadModel("./assets/weird_shape/weird_shape2.gltf")
     .catch(err => console.error("Model load failed:", err));
 
 // Air
+loadModel("./assets/air/air.gltf")
+    .then(model => {
+        model.scale.setScalar(20);
+        inventory.add(model, "air");
+
+        const clone = model.clone(true);
+        clone.position.set(-16, 10, -250);
+
+        applyInteractionRecursively(clone, "text-4", bS, hS, cS);
+
+        clone.userData.rotationAxis = new THREE.Vector3(0.3, 0, 0);
+        clone.userData.rotationSpeed = 0.01; // radians per frame
+
+        clone.traverse(child => {
+          if (child.isMesh) {
+              child.material = mirrorMaterial_dark;
+              child.castShadow = true;
+              child.receiveShadow = true;
+          }
+      });
+
+        manager.scene.add(clone);
+    })
+    .catch(err => console.error("Model load failed:", err));
 
 // Time
 loadModel("./assets/melting/melting_man2.gltf")
@@ -298,6 +333,43 @@ loadModel("./assets/melting/melting_man2.gltf")
     console.log("imported");
 })
 .catch(err => console.error("Model load failed:", err));
+
+// --------------------
+// Load Darkroom Sphere
+// --------------------
+function loadDarkroomSphere() {
+  const sphereGeometry = new THREE.SphereGeometry(15, 64, 64);
+  const sphereMaterial = new THREE.MeshStandardMaterial({
+      color: 0x000000,
+      metalness: 0.5,
+      roughness: 1,
+      emissive: 0x000000,
+      emissiveIntensity: 0
+  });
+  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+  sphere.position.set(-80, 20, -700);
+  manager.scene.add(sphere);
+  inventory.add(sphere, "Darkroom Sphere");
+
+  makeInteractableObject(sphere, "modal-darkroom", 1, 1.5, 1.7);
+
+  sphere.userData.onHoverEnter = () => {
+      sphere.userData.targetScale = 1.5;
+      sphere.material.emissive = new THREE.Color(0xFFB04F);
+      sphere.material.emissiveIntensity = 0.5;
+  };
+
+  sphere.userData.onHoverExit = () => {
+      sphere.userData.targetScale = 1;
+      sphere.material.emissive = new THREE.Color(0x000000);
+      sphere.material.emissiveIntensity = 0;
+  };
+
+  sphere.userData.onClick = () => openModal(sphere, "modal-darkroom");
+}
+
+loadDarkroomSphere();
+
 
 // --------------------------------------------------
 // Start Render Loop

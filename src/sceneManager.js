@@ -28,7 +28,7 @@ export class SceneManager {
 
         // Scene
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.FogExp2(0x000000, 0.005);
+        this.scene.fog = new THREE.FogExp2(0x000000, 0.006);
 
         // Camera
         this.camera = new THREE.PerspectiveCamera(
@@ -37,7 +37,7 @@ export class SceneManager {
             0.1,
             15000
         );
-        this.camera.position.set(0, 8, 8);
+        this.camera.position.set(-8, 15, 4);
 
         // --------------------------------------------------
         // LIGHT MANAGER
@@ -109,6 +109,17 @@ export class SceneManager {
         angle: 0.45,
         position: [-80, 53, -420],
         target: [-140, -10, -420],
+        pulse: true,
+        pulseSpeed: 3.5,
+        pulseAmount: 0.55
+      });
+
+      this.lights.createSpotlight({
+        color: 0xffffff,
+        intensity: 7000,
+        angle: 0.45,
+        position: [-10, 53, -65],
+        target: [-10, 250, -650],
         pulse: true,
         pulseSpeed: 3.5,
         pulseAmount: 0.55

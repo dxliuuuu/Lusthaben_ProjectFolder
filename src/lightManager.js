@@ -55,11 +55,11 @@ export class LightManager {
 
         this.scene.add(light);
 
-        // helper
-        const helper = new THREE.SpotLightHelper(light);
-        this.scene.add(helper); 
-        light.updateMatrixWorld(true); 
-        helper.update();
+        // // helper
+        // const helper = new THREE.SpotLightHelper(light);
+        // this.scene.add(helper); 
+        // light.updateMatrixWorld(true); 
+        // helper.update();
 
         // pulsing
         if (pulse) {

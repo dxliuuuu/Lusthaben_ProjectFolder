@@ -51,6 +51,21 @@ html, body {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
+#modal-content a {
+  color: white;              /* match your modal text */
+  text-decoration: none;     /* remove underline */
+  font-weight: normal;       /* or bold, your preference */
+  transition: all 0.3s ease; /* smooth hover animation */
+}
+
+/* Hover glow effect */
+#modal-content a:hover {
+  color: white;            /* or leave white */
+  text-shadow: 0 0 12px #ffffff;
+  letter-spacing: 1px;       /* optional subtle expansion */
+}
+
+
 #modal-close {
   position: absolute;
   top: 650px;
@@ -72,3 +87,27 @@ html, body {
   text-shadow: 0 0 10px #ffffff;     
 }
 
+#loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  color: white;
+  font-size: 32px;
+  font-family: Arial, sans-serif;
+}
+
+#loader-text {
+  animation: blink 5s infinite;
+}
+
+@keyframes blink {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0; }
+}
