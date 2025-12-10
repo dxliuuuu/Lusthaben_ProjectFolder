@@ -138,7 +138,7 @@ document.body.appendChild(stats.dom);
 // --------------------------------------------------
 
 const controls = new FlyControls(manager.camera, manager.renderer.domElement);
-controls.movementSpeed = 100;
+controls.movementSpeed = 50;
 controls.rollSpeed = 0; // lock roll
 controls.dragToLook = false; // user doesn't have to click
 
@@ -263,13 +263,13 @@ loadModel("./assets/hands/hands.gltf")
 // LightShape
 loadModel("./assets/weird_shape/weird_shape2.gltf")
     .then(model => {
-        model.scale.setScalar(0.25);
+        model.scale.setScalar(0.3);
         inventory.add(model, "weirdShape");
 
         const clone = model.clone(true);
-        clone.position.set(-16, 10, -250);
+        clone.position.set(-20, 10, -250);
 
-        applyInteractionRecursively(clone, "text-3", 0.25, 0.3, 0.32);
+        applyInteractionRecursively(clone, "text-3", 0.3, 0.33, 0.36);
 
         clone.userData.rotationAxis = new THREE.Vector3(0.3, 0, 0);
         clone.userData.rotationSpeed = 0.01; // radians per frame
@@ -289,15 +289,15 @@ loadModel("./assets/weird_shape/weird_shape2.gltf")
 // Air
 loadModel("./assets/air/air.gltf")
     .then(model => {
-        model.scale.setScalar(20);
+        model.scale.setScalar(2.8);
         inventory.add(model, "air");
 
         const clone = model.clone(true);
-        clone.position.set(-16, 10, -250);
+        clone.position.set(40, 30, -360);
 
-        applyInteractionRecursively(clone, "text-4", bS, hS, cS);
+        applyInteractionRecursively(clone, "text-4", 2.8, 3.2, 3.5);
 
-        clone.userData.rotationAxis = new THREE.Vector3(0.3, 0, 0);
+        clone.userData.rotationAxis = new THREE.Vector3(0, 0.3, 0);
         clone.userData.rotationSpeed = 0.01; // radians per frame
 
         clone.traverse(child => {
@@ -315,14 +315,14 @@ loadModel("./assets/air/air.gltf")
 // Time
 loadModel("./assets/melting/melting_man2.gltf")
 .then(model => {
-    model.scale.setScalar(nScale);
+    model.scale.setScalar(2.8);
     inventory.add(model, "melting_man");
 
     const clone = model.clone(true);
     clone.position.set(-60, 20, -500);
     clone.rotation.y = - Math.PI / 2;
 
-    applyInteractionRecursively(clone, "text-5", 2, 2.5, 2.8);
+    applyInteractionRecursively(clone, "text-5", 2.8, 3.1, 3.5);
 
     clone.userData.rotationAxis = new THREE.Vector3(0, 0, 0.5);
     clone.userData.rotationSpeed = 0.01; // radians per frame
@@ -341,8 +341,8 @@ function loadDarkroomSphere() {
   const sphereGeometry = new THREE.SphereGeometry(15, 64, 64);
   const sphereMaterial = new THREE.MeshStandardMaterial({
       color: 0x000000,
-      metalness: 0.5,
-      roughness: 1,
+      metalness: 1,
+      roughness: 0,
       emissive: 0x000000,
       emissiveIntensity: 0
   });
@@ -355,8 +355,8 @@ function loadDarkroomSphere() {
 
   sphere.userData.onHoverEnter = () => {
       sphere.userData.targetScale = 1.5;
-      sphere.material.emissive = new THREE.Color(0xFFB04F);
-      sphere.material.emissiveIntensity = 0.5;
+      sphere.material.emissive = new THREE.Color(0xff0000);
+      sphere.material.emissiveIntensity = 1.5;
   };
 
   sphere.userData.onHoverExit = () => {

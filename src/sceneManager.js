@@ -71,8 +71,8 @@ export class SceneManager {
         // light 3
         this.lights.createSpotlight({
             color: 0xff0000,
-            intensity: 3000,
-            angle: 0.35,
+            intensity: 4000,
+            angle: 0.45,
             position: [-50, 60, -150],
             target: [-20, 0, -300],
             pulse: true,
