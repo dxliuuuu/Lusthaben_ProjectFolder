@@ -10,9 +10,9 @@ import Stats from "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/libs/
 const canvas = document.getElementById("c");
 const manager = new SceneManager(canvas);
 const inventory = new Inventory();
-const bS = 1;
+const bS = 1.3;
 const hS = 1.5;
-const cS = 1.9;
+const cS = 2.1;
 const nScale = 2;
 
 // Background audio
@@ -327,6 +327,13 @@ loadModel("./assets/melting/melting_man2.gltf")
     clone.userData.rotationAxis = new THREE.Vector3(0, 0, 0.5);
     clone.userData.rotationSpeed = 0.01; // radians per frame
 
+    clone.traverse(child => {
+      if (child.isMesh) {
+          child.material = mirrorMaterial_dark;
+          child.castShadow = true;
+          child.receiveShadow = true;
+      }
+  });
 
     manager.scene.add(clone);
 

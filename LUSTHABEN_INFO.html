@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ABOUT LUSTHABEN</title>
+
+<audio id="bg-audio" src="./audio/LUSTHABEN Sonic Pi Audio/Ambience.wav" autoplay loop></audio>
+
+<style>
+    body {
+        margin: 0;
+        background: black;
+        font-family: Arial, sans-serif;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 780px;
+        padding: 40px 50px;
+        line-height: 1.65;
+        text-align: center;
+        flex: 1;
+    }
+
+    p {
+        margin: 0 0 1.3em;
+        text-align: left;
+    }
+
+    subheader {
+        font-size:24px;
+        display: block;
+    }
+
+
+    strong {
+        display: block;
+        margin-top: 1.8em;
+        margin-bottom: 0.6em;
+    }
+
+    .main-text {
+        font-size: 48px;
+        font-weight: bold;
+        transition: 0.3s ease;
+        cursor: default;
+    }
+
+    .main-text:hover {
+        text-shadow: 0 0 10px #ffffff, 0 0 5px #bbbbbb, 0 0 10px #999999;
+    }
+
+    /* Transparent glowing button */
+    #restartBtn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 12px 28px;
+        margin: 10px 0;
+        font-size: 18px;
+        cursor: pointer;
+        transition: 0.3s ease;
+        border-radius: 8px;
+        text-transform: uppercase;
+    }
+
+    #restartBtn:hover {
+        box-shadow: 0 0 10px #ffffff, 0 0 10px #bbbbbb, 0 0 10px #999999;
+        border-color: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Left-align heading "LUST HABEN ultimately asks" */
+    .left-align {
+        text-align: left;
+        margin-top: 2em;
+        margin-bottom: 0.6em;
+    }
+</style>
+
+<script>
+    // Link button to index.html
+    window.onload = function() {
+        const restartBtn = document.getElementById('restartBtn');
+        restartBtn.onclick = () => {
+            window.location.href = "./index.html";
+        };
+    };
+</script>
+</head>
+
+<body>
+
+<div class="container">
+
+<p class="main-text"><strong>LUST HABEN</strong></p> 
+
+<p>An experimental web-based spatial project exploring desire, intimacy, and memory through a navigable virtual architecture. Developed in response to our lived experiences of Berlin's techno club culture, the work reimagines the club not as a site of spectacle, but as a fragmented emotional terrain where sensation becomes the primary mode of meaning-making.</p>
+
+<p>The project consists of two interactive environments: the Factory and the Darkroom.</p>
+
+<p>The Factory functions as a memory machine. It is a space of visible labor, construction, and fetish. Within it, five digital artifacts are scattered across the room. Each artifact operates as a fragment of desire, including pressure, heat, light, air, and time.</p>
+
+<p>The Darkroom, by contrast, is a space of dissolution. It is nonlinear, immersive, and sensorial. Texts appear slowly, line by line, like breath. Light is scattered into particles, each glaring in an ever-expanding dark space. The user is invited not to consume but to feel through. The darkroom is a portal: where ego dissolves, and desire becomes spatial, ambient, and immersive.</p>
+
+<p>Technically, the project is built in Three.js, using WASD navigation and real-time rendering to invite embodied digital movement. Unlike typical scroll-based web experiences, LUST HABEN positions the user as a moving subject. The act of navigating becomes performative, a choreography of attention, proximity, and drift. The visual architecture incorporates lighting integration, WebGL lens effects, and post-processing techniques to create a cinematic quality within the browser. By pushing conventional constraints of web-based 3D environments, the project experiments with custom materials, raycasting mechanisms, and dynamic lighting methods, exploring the possibilities of atmosphere and visual intensity in an online setting.</p>
+
+<p>The artifacts within the Factory are modeled in Blender, each designed as an architectural translation of a specific desire or sensation. These objects are not representations but spatial propositions, sculpted through affective intuition. The modeling process resists clarity and leans into tension, repetition, and structural ambiguity.</p>
+
+<p>The first artifact emerges from the sensation of pressure—the physical density of bass frequencies as they press against the chest. It begins with ordered, geometric forms such as columns and modular planes, referencing the language of industrial architecture. Portions of the model are then distorted, fragmented, and displaced. These interruptions mimic the uneven rhythm of subwoofers, capturing the oscillating pulses of sound that exceed the auditory and become bodily. The object does not depict sound, but rather vibrates with it. It becomes an architectural speaker, transmitting rhythm through spatial dissonance.</p>
+
+<p>The sonic environment of LUST HABEN is composed using Sonic Pi, where sound is treated not as background but as spatial material. Each room carries its own affective tone: the Entry and Factory environments feature darker ambient textures—low frequencies, sustained drones, and minimal loops—that evoke tension, density, and withheld energy, mirroring the structural pressure within the modeled artifacts. In contrast, the Darkroom employs an ethereal soundscape, with filtered tones, delays, and reverberations that drift rather than anchor, suggesting dissolution and the possibility of transcendence. This shift from weight to air, from rhythm to suspension, parallels the user's journey inward.</p>
+
+<p>Through code, sound, and architecture, the work stages a sensorial journey that resists resolution.</p>
+
+<subheader class="left-align">LUST HABEN ultimately asks:</subheader>
+
+<p>What does it mean to desire in virtual space?</p>
+<title>Can longing be rendered into architecture?</title>
+<p>How does a body remember or reconfigure pleasure, absence, and presence through digital touch?</p>
+
+</div>
+
+<!-- Glowing button at bottom -->
+<button id="restartBtn">Restart</button>
+
+</body>
+</html>

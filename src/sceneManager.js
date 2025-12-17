@@ -116,7 +116,7 @@ export class SceneManager {
 
       this.lights.createSpotlight({
         color: 0xffffff,
-        intensity: 7000,
+        intensity: 6000,
         angle: 0.45,
         position: [-10, 53, -65],
         target: [-10, 250, -650],
@@ -131,9 +131,9 @@ export class SceneManager {
 
         this.bloom = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            1.5,   // strength
+            1.3,   // strength
             0.5,   // radius
-            0.2   // threshold
+            0.25   // threshold
         );
 
         this.composer.addPass(this.bloom);
