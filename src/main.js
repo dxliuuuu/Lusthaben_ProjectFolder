@@ -190,12 +190,12 @@ async function loadInteractiveModel({
   
 /* ------------------ Load models ------------------ */
 
-const envMap = await loadHDRI("./assets/studio_small_09_4k.exr");
+const envMap = await loadHDRI("/Lusthaben_ProjectFolder/assets/studio_small_09_4k.exr");
 
 manager.scene.environment = envMap;
 
 loadInteractiveModel({
-    path: "./assets/pressure/pressure.gltf",
+    path: "/Lusthaben_ProjectFolder/assets/pressure/pressure.gltf",
     position: new THREE.Vector3(10, 20, -70),
     modalId: "text-1",
     scale: { base: 1.2, hover: 1.8, click: 2 },
@@ -204,7 +204,7 @@ loadInteractiveModel({
   });
 
 loadInteractiveModel({
-    path: "./assets/hands/hands.gltf",
+    path: "/Lusthaben_ProjectFolder/assets/hands/hands.gltf",
     position: new THREE.Vector3(-60, 20, -150),
     modalId: "text-2",
     scale: { base: 1.5, hover: 1.8, click: 2 },
@@ -213,7 +213,7 @@ loadInteractiveModel({
   });
 
 loadInteractiveModel({
-    path: "./assets/weird_shape/weird_shape2.gltf",
+    path: "/Lusthaben_ProjectFolder/assets/weird_shape/weird_shape2.gltf",
     position: new THREE.Vector3(-20, 15, -250),
     modalId: "text-3",
     scale: { base: 0.3, hover: 0.33, click: 0.36 },
@@ -222,7 +222,7 @@ loadInteractiveModel({
   });
 
   loadInteractiveModel({
-    path: "./assets/air/air.gltf",
+    path: "/Lusthaben_ProjectFolder/assets/air/air.gltf",
     position: new THREE.Vector3(40, 30, -360),
     modalId: "text-4",
     scale: { base: 2.3, hover: 2.5, click: 2.8 },
@@ -231,7 +231,7 @@ loadInteractiveModel({
   });
 
   loadInteractiveModel({
-    path: "./assets/melting/melting_man2.gltf",
+    path: "/Lusthaben_ProjectFolder/assets/melting/melting_man2.gltf",
     position: new THREE.Vector3(-20, 25, -550),
     modalId: "text-5",
     scale: { base: 2.8, hover: 3, click: 3.5 },
@@ -240,7 +240,7 @@ loadInteractiveModel({
   });
   
 
-loadModelSafe("./assets/warehouse/warehouse_remeshed.gltf")
+loadModelSafe("/Lusthaben_ProjectFolder/assets/warehouse/warehouse_remeshed.gltf")
 .then(model => {
     model.scale.setScalar(20);
     const clone = model.clone(true);
