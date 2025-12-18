@@ -2,398 +2,298 @@ import * as THREE from "three";
 import { SceneManager } from "./sceneManager.js";
 import { createPointer } from "./pointer.js";
 import { Inventory } from "./objects/inventory.js";
-import { loadModel } from "./objects/loadModel.js";
-import { Modal, openModal } from "./modal.js";
-import { FlyControls } from "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/controls/FlyControls.js";
-import Stats from "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/libs/stats.module.js";
+import { loadModelSafe } from "./loadModelSafe.js";
+import { openModal } from "./modal.js";
+import { FlyControls } from "jsm/controls/FlyControls.js";
+import Stats from "jsm/libs/stats.module.js";
+import { EXRLoader } from "jsm/loaders/EXRLoader.js";
+
+/* ------------------ Core setup ------------------ */
 
 const canvas = document.getElementById("c");
 const manager = new SceneManager(canvas);
-const inventory = new Inventory();
-const bS = 1.3;
-const hS = 1.5;
-const cS = 2.1;
-const nScale = 2;
 
-// Background audio
+/* ------------------ Constants ------------------ */
+
+const BASE_SCALE = 1.3;
+const HOVER_SCALE = 1.5;
+const CLICK_SCALE = 2.1;
+const NORMAL_SCALE = 2;
+
+/* ------------------ Audio ------------------ */
+
 const bgAudio = new Audio("./audio/LUSTHABEN Sonic Pi Audio/Ambient Melody.wav");
-bgAudio.currentTime = 1;
-bgAudio.loop = true;       // loops continuously
-bgAudio.volume = 0.8;      // adjust as needed
-bgAudio.play().catch(err => console.log("Autoplay blocked, will play on first user interaction"));
+bgAudio.loop = true;
+bgAudio.volume = 0.8;
 
-window.addEventListener("click", () => {
-  bgAudio.play();
-}, { once: true });
+bgAudio.play().catch(() =>
+  window.addEventListener("click", () => bgAudio.play(), { once: true })
+);
 
-// material
-const mirrorMaterial_dark = new THREE.MeshPhysicalMaterial({
+/* ------------------ Materials ------------------ */
+
+const mirrorMaterialLight = new THREE.MeshPhysicalMaterial({
   color: 0xffffff,
   metalness: 1,
   roughness: 0.2,
-  reflectivity: 1,     // how reflective the surface is
-  clearcoat: 1,        // shiny coating
+  reflectivity: 1, 
+  clearcoat: 1,
   clearcoatRoughness: 0
 });
 
-const Material_light = new THREE.MeshPhysicalMaterial({
-  color: 0xffffff,
-  metalness: 1,
-  roughness: 0.2,
-  reflectivity: 1,     // how reflective the surface is
-  clearcoat: 1,        // shiny coating
-  clearcoatRoughness: 0
-});
-
-// Assign it as environment map
-mirrorMaterial_dark.envMap = "./assets/studio_small_09_4k.exr";
-mirrorMaterial_dark.envMapIntensity = 500; // reflection intensity
-
-canvas.addEventListener("mousemove", (event) => {
-    const rect = canvas.getBoundingClientRect();
-    mouseX = (event.clientX - rect.left) / rect.width;
-});
-
-
-function makeInteractableObject(obj, modalId, baseScale = bS, hoverScale = hS, clickScale = cS) {
-  obj.userData.interactable = true;
-
-  // set initial scale
-  obj.scale.setScalar(baseScale);
-  obj.userData.targetScale = baseScale;
-
-  // store original emissive per mesh
-  const originalEmissives = new Map();
-  obj.traverse(child => {
-      if (child.isMesh) {
-          originalEmissives.set(child, child.material.emissive ? child.material.emissive.clone() : new THREE.Color(0x000000));
-      }
+const mirrorMaterialDark = new THREE.MeshPhysicalMaterial({
+    color: 0x000000,
+    metalness: 1,
+    roughness: 0.2,
+    reflectivity: 1, 
+    clearcoat: 1,
+    clearcoatRoughness: 0
   });
 
-  obj.userData.onHoverEnter = () => {
-      obj.userData.targetScale = hoverScale;
-      obj.traverse(child => {
-          if (child.isMesh) {
-              child.material.emissive = new THREE.Color(0xffffff);
-              child.material.emissiveIntensity = 1;
-          }
-      });
-  };
+/* ------------------ HDRI helper ------------------ */
 
-  obj.userData.onHoverExit = () => {
-      obj.userData.targetScale = baseScale;
-      obj.traverse(child => {
-          if (child.isMesh && originalEmissives.has(child)) {
-              child.material.emissive = originalEmissives.get(child).clone();
-          }
-      });
-  };
-
-  obj.userData.onClick = () => {
-      openModal(obj, modalId);
-      obj.userData.targetScale = clickScale;
-  };
-
-  return obj;
-}
-
-// recursively apply interaction to imported models
-function applyInteractionRecursively(obj, modalId, baseScale = bS, hoverScale = hS, clickScale = cS) {
-    makeInteractableObject(obj, modalId, baseScale, hoverScale, clickScale);
-
-    obj.traverse(child => {
-        if (child.isMesh) {
-            makeInteractableObject(child, modalId, baseScale, hoverScale, clickScale);
-        }
+async function loadHDRI(path) {
+    const pmrem = new THREE.PMREMGenerator(manager.renderer);
+    pmrem.compileEquirectangularShader();
+  
+    return new Promise((resolve, reject) => {
+      new EXRLoader().load(
+        path,
+        texture => {
+          const envMap = pmrem.fromEquirectangular(texture).texture;
+          texture.dispose();
+          pmrem.dispose();
+          resolve(envMap);
+        },
+        undefined,
+        reject
+      );
     });
+  }  
 
-    return obj;
-}
+/* ------------------ Interaction helpers ------------------ */
 
-// --------------------------------------------------
-// Pointer interactions
-// --------------------------------------------------
+function makeInteractable(
+    obj,
+    modalId,
+    {
+      scale = { base: BASE_SCALE, hover: HOVER_SCALE, click: CLICK_SCALE },
+      rotation = null
+    } = {}
+  ) {
+    obj.userData.interactable = true;
+  
+    // ----- Scale -----
+    obj.userData.scale = scale;
+    obj.userData.targetScale = scale.base;
+    obj.scale.setScalar(scale.base);
+  
+    // ----- Rotation -----
+    if (rotation) {
+      obj.userData.rotationAxis = new THREE.Vector3(...rotation.axis).normalize();
+      obj.userData.rotationSpeed = rotation.speed;
+    }
+  
+    // ----- Interaction -----
+    obj.userData.onHoverEnter = () => {
+      obj.userData.targetScale = scale.hover;
+    };
+  
+    obj.userData.onHoverExit = () => {
+      obj.userData.targetScale = scale.base;
+    };
+  
+    obj.userData.onClick = () => {
+      if (modalId) openModal(obj, modalId);
+      obj.userData.targetScale = scale.click ?? scale.hover;
+    };
+  }
+
+  function applyInteractionRecursively(obj, modalId, options) {
+    makeInteractable(obj, modalId, options);
+  
+    obj.traverse(child => {
+      if (child.isMesh) {
+        makeInteractable(child, modalId, options);
+      }
+    });
+  }
+  
+/* ------------------ Pointer ------------------ */
 
 createPointer(manager.scene, manager.camera, canvas, {
-  onClick(obj) {
-      obj.userData?.interactable && obj.userData.onClick?.();
-  },
-  onHoverEnter(obj) {
-      obj.userData?.interactable && obj.userData.onHoverEnter?.();
-  },
-  onHoverExit(obj) {
-      obj.userData?.interactable && obj.userData.onHoverExit?.();
-  }
+  onClick: obj => obj.userData?.onClick?.(),
+  onHoverEnter: obj => obj.userData?.onHoverEnter?.(),
+  onHoverExit: obj => obj.userData?.onHoverExit?.()
 });
 
-// --------------------------------------------------
-// Stats
-// --------------------------------------------------
+/* ------------------ Controls ------------------ */
+
+const controls = new FlyControls(manager.camera, manager.renderer.domElement);
+controls.movementSpeed = 50;
+controls.dragToLook = false;
+controls.rollSpeed = 0;
+manager.controls = controls;
+
+let mouseX = 0.5;
+canvas.addEventListener("mousemove", e => {
+  const r = canvas.getBoundingClientRect();
+  mouseX = (e.clientX - r.left) / r.width;
+});
+
+const edgeMargin = 0.05;
+const panSpeed = 0.02;
+const originalUpdate = controls.update.bind(controls);
+
+controls.update = delta => {
+  originalUpdate(delta);
+  const euler = new THREE.Euler().setFromQuaternion(controls.object.quaternion, "YXZ");
+  if (mouseX < edgeMargin) euler.y += panSpeed;
+  if (mouseX > 1 - edgeMargin) euler.y -= panSpeed;
+  controls.object.quaternion.setFromEuler(euler);
+};
+
+/* ------------------ Stats (optional) ------------------ */
 
 const stats = new Stats();
 document.body.appendChild(stats.dom);
 
-// --------------------------------------------------
-// FlyControls with edge-screen panning
-// --------------------------------------------------
+/* ------------------ Model loader helper ------------------ */
 
-const controls = new FlyControls(manager.camera, manager.renderer.domElement);
-controls.movementSpeed = 50;
-controls.rollSpeed = 0; // lock roll
-controls.dragToLook = false; // user doesn't have to click
-
-// Edge pan settings
-const edgeMargin = 0.05; // 5% of canvas width
-const panSpeed = 0.02;   // radians per frame
-let mouseX = 0.5;
-
-// Track mouse position
-canvas.addEventListener("mousemove", (event) => {
-    const rect = canvas.getBoundingClientRect();
-    mouseX = (event.clientX - rect.left) / rect.width;
-});
-
-// Override update to implement horizontal-only edge panning
-const originalUpdate = controls.update.bind(controls);
-controls.update = function(delta) {
-    originalUpdate(delta);
-
-    // Get current yaw from camera quaternion
-    const euler = new THREE.Euler().setFromQuaternion(controls.object.quaternion, "YXZ");
-    let yaw = euler.y;
-
-    // Rotate left/right if mouse is near edges
-    if (mouseX < edgeMargin) {
-        yaw += panSpeed;
-    } else if (mouseX > 1 - edgeMargin) {
-        yaw -= panSpeed;
-    }
-
-    // Lock pitch and roll
-    const pitch = 0;
-    const roll = 0;
-
-    controls.object.quaternion.setFromEuler(new THREE.Euler(pitch, yaw, roll, "YXZ"));
-};
-
-// Attach to SceneManager
-manager.controls = controls;
-
-// --------------------------------------------------
-// Load Imported Models 
-// --------------------------------------------------
-
-// Warehouse
-loadModel("./assets/warehouse/warehouse_remeshed.gltf")
-    .then(model => {
-        model.scale.setScalar(20);
-        inventory.add(model, "Warehouse");
-
-        const clone = model.clone(true);
-        clone.position.set(100, -50, -300);
-        clone.rotation.y = Math.PI / 2;
-
-        clone.traverse(child => {
-          if (child.isMesh) {
-              const mat = child.material;
-              child.material = mat.clone(); // clone material so other objects are unaffected
-              child.material.color = new THREE.Color(0x454545); // dark gray
-              child.material.needsUpdate = true;
-              child.castShadow = true;
-              child.receiveShadow = true;
-          }
-      });
-
-      
-        manager.scene.add(clone);
-    })
-    .catch(err => console.error("Model load failed:", err));
-
-// Pressure
-loadModel("./assets/pressure/pressure.gltf")
-.then(model => {
-    model.scale.setScalar(nScale);
-    inventory.add(model, "hands");
-
+async function loadInteractiveModel({
+    path,
+    position,
+    modalId,
+    scale = { base: NORMAL_SCALE, hover: NORMAL_SCALE * 1.1, click: NORMAL_SCALE * 1.2 },
+    rotation = null,
+    material = null,
+    yRotation = 0
+  }) {
+    const model = await loadModelSafe(path);
     const clone = model.clone(true);
-    clone.position.set(10, 20, -80);
-
-    applyInteractionRecursively(clone, "text-1", bS, hS, cS);
-
-    clone.userData.rotationAxis = new THREE.Vector3(0, 0.3, 0); // y-axis
-    clone.userData.rotationSpeed = 0.01; // radians per frame
-
-    clone.traverse(child => {
-      if (child.isMesh) {
-          child.material = mirrorMaterial_dark;
-          child.castShadow = true;
-          child.receiveShadow = true;
+  
+    clone.position.copy(position);
+    clone.rotation.y = yRotation;
+    clone.scale.setScalar(scale.base);
+  
+    clone.traverse(c => {
+      if (c.isMesh) {
+        if (material) c.material = material;
+        c.castShadow = c.receiveShadow = true;
       }
+    });
+  
+    applyInteractionRecursively(clone, modalId, { scale, rotation });
+  
+    manager.scene.add(clone);
+  }
+  
+/* ------------------ Load models ------------------ */
+
+const envMap = await loadHDRI("./assets/studio_small_09_4k.exr");
+
+manager.scene.environment = envMap;
+
+loadInteractiveModel({
+    path: "./assets/pressure/pressure.gltf",
+    position: new THREE.Vector3(10, 20, -70),
+    modalId: "text-1",
+    scale: { base: 1.2, hover: 1.8, click: 2 },
+    rotation: { axis: [0, 1, 0], speed: 0.01 },
+    material: mirrorMaterialDark
   });
+
+loadInteractiveModel({
+    path: "./assets/hands/hands.gltf",
+    position: new THREE.Vector3(-60, 20, -150),
+    modalId: "text-2",
+    scale: { base: 1.5, hover: 1.8, click: 2 },
+    rotation: { axis: [0, 1, 0], speed: 0.005 },
+    material: mirrorMaterialLight
+  });
+
+loadInteractiveModel({
+    path: "./assets/weird_shape/weird_shape2.gltf",
+    position: new THREE.Vector3(-20, 15, -250),
+    modalId: "text-3",
+    scale: { base: 0.3, hover: 0.33, click: 0.36 },
+    rotation: { axis: [1, 0, 0], speed: 0.01 },
+    material: mirrorMaterialLight
+  });
+
+  loadInteractiveModel({
+    path: "./assets/air/air.gltf",
+    position: new THREE.Vector3(40, 30, -360),
+    modalId: "text-4",
+    scale: { base: 2.3, hover: 2.5, click: 2.8 },
+    rotation: { axis: [0, 1, 0], speed: 0.08 }, // per second
+    material: mirrorMaterialLight
+  });
+
+  loadInteractiveModel({
+    path: "./assets/melting/melting_man2.gltf",
+    position: new THREE.Vector3(-20, 25, -550),
+    modalId: "text-5",
+    scale: { base: 2.8, hover: 3, click: 3.5 },
+    rotation: { axis: [0, 0, 1], speed: 0.01 },
+    material: mirrorMaterialLight
+  });
+  
+
+loadModelSafe("./assets/warehouse/warehouse_remeshed.gltf")
+.then(model => {
+    model.scale.setScalar(20);
+    const clone = model.clone(true);
+    clone.position.set(100, -50, -300)
+    clone.rotation.y = Math.PI/2;
+
+    clone.traverse(c => {
+        if (c.isMesh) {
+            c.castShadow = c.receiveShadow = true;
+        }
+        });
 
     manager.scene.add(clone);
-})
-.catch(err => console.error("Model load failed:", err));
-
-// Skin
-loadModel("./assets/hands/hands.gltf")
-    .then(model => {
-        model.scale.setScalar(nScale);
-        inventory.add(model, "hands");
-
-        const clone = model.clone(true);
-        clone.position.set(-60, 20, -150);
-
-        applyInteractionRecursively(clone, "text-2", bS, hS, cS);
-
-        clone.traverse(child => {
-          if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
-          }
-      });
-
-        clone.userData.rotationAxis = new THREE.Vector3(0, 0.5, 0);
-        clone.userData.rotationSpeed = 0.01; // radians per frame
-
-        manager.scene.add(clone);
     })
-    .catch(err => console.error("Model load failed:", err));
+    .catch(console.error);
+    
 
-// LightShape
-loadModel("./assets/weird_shape/weird_shape2.gltf")
-    .then(model => {
-        model.scale.setScalar(0.3);
-        inventory.add(model, "weirdShape");
+/* ------------------ Darkroom Sphere ------------------ */
 
-        const clone = model.clone(true);
-        clone.position.set(-20, 10, -250);
+const sphere = new THREE.Mesh(
+  new THREE.SphereGeometry(15, 64, 64),
+  new THREE.MeshStandardMaterial({ color: 0x000000 })
+);
 
-        applyInteractionRecursively(clone, "text-3", 0.3, 0.33, 0.36);
+sphere.position.set(-80, 20, -700);
+sphere.userData.interactable = true;
+sphere.userData.targetScale = 1;
+sphere.material = mirrorMaterialDark;
 
-        clone.userData.rotationAxis = new THREE.Vector3(0.3, 0, 0);
-        clone.userData.rotationSpeed = 0.01; // radians per frame
 
-        clone.traverse(child => {
-          if (child.isMesh) {
-              child.material = mirrorMaterial_dark;
-              child.castShadow = true;
-              child.receiveShadow = true;
-          }
-      });
+sphere.userData.onHoverEnter = () => (sphere.userData.targetScale = 1.5);
+sphere.userData.onHoverExit  = () => (sphere.userData.targetScale = 1);
+sphere.userData.onClick      = () => (window.location.href = "./darkroom.html");
 
-        manager.scene.add(clone);
-    })
-    .catch(err => console.error("Model load failed:", err));
+manager.scene.add(sphere);
 
-// Air
-loadModel("./assets/air/air.gltf")
-    .then(model => {
-        model.scale.setScalar(2.8);
-        inventory.add(model, "air");
+/* ------------------ Animate scale ------------------ */
 
-        const clone = model.clone(true);
-        clone.position.set(40, 30, -360);
+const originalTick = manager._tick.bind(manager);
 
-        applyInteractionRecursively(clone, "text-4", 2.8, 3.2, 3.5);
-
-        clone.userData.rotationAxis = new THREE.Vector3(0, 0.3, 0);
-        clone.userData.rotationSpeed = 0.01; // radians per frame
-
-        clone.traverse(child => {
-          if (child.isMesh) {
-              child.material = mirrorMaterial_dark;
-              child.castShadow = true;
-              child.receiveShadow = true;
-          }
-      });
-
-        manager.scene.add(clone);
-    })
-    .catch(err => console.error("Model load failed:", err));
-
-// Time
-loadModel("./assets/melting/melting_man2.gltf")
-.then(model => {
-    model.scale.setScalar(2.8);
-    inventory.add(model, "melting_man");
-
-    const clone = model.clone(true);
-    clone.position.set(-60, 20, -500);
-    clone.rotation.y = - Math.PI / 2;
-
-    applyInteractionRecursively(clone, "text-5", 2.8, 3.1, 3.5);
-
-    clone.userData.rotationAxis = new THREE.Vector3(0, 0, 0.5);
-    clone.userData.rotationSpeed = 0.01; // radians per frame
-
-    clone.traverse(child => {
-      if (child.isMesh) {
-          child.material = mirrorMaterial_dark;
-          child.castShadow = true;
-          child.receiveShadow = true;
+manager._tick = function(delta) {
+    manager.scene.traverse(obj => {
+      if (obj.userData?.rotationAxis && typeof obj.userData.rotationSpeed === "number") {
+        obj.rotateOnAxis(obj.userData.rotationAxis, obj.userData.rotationSpeed * delta);
       }
-  });
-
-    manager.scene.add(clone);
-
-    console.log("imported");
-})
-.catch(err => console.error("Model load failed:", err));
-
-// --------------------
-// Load Darkroom Sphere
-// --------------------
-function loadDarkroomSphere() {
-  const sphereGeometry = new THREE.SphereGeometry(15, 64, 64);
-  const sphereMaterial = new THREE.MeshStandardMaterial({
-      color: 0x000000,
-      metalness: 1,
-      roughness: 0,
-      emissive: 0x000000,
-      emissiveIntensity: 0
-  });
-  const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-  sphere.position.set(-80, 20, -700);
-  manager.scene.add(sphere);
-  inventory.add(sphere, "Darkroom Sphere");
-
-  makeInteractableObject(sphere, "modal-darkroom", 1, 1.5, 1.7);
-
-  sphere.userData.onHoverEnter = () => {
-      sphere.userData.targetScale = 1.5;
-      sphere.material.emissive = new THREE.Color(0xff0000);
-      sphere.material.emissiveIntensity = 1.5;
+      if (obj.userData?.targetScale !== undefined) {
+        const s = obj.scale.x;
+        const t = obj.userData.targetScale;
+        obj.scale.setScalar(s + (t - s) * 0.1);
+      }
+    });
+    originalTick(delta);
   };
-
-  sphere.userData.onHoverExit = () => {
-      sphere.userData.targetScale = 1;
-      sphere.material.emissive = new THREE.Color(0x000000);
-      sphere.material.emissiveIntensity = 0;
-  };
-
-  sphere.userData.onClick = () => openModal(sphere, "modal-darkroom");
-}
-
-loadDarkroomSphere();
-
-
-// --------------------------------------------------
-// Start Render Loop
-// --------------------------------------------------
+  
 
 manager.start();
-
-// Animate object scale smoothly in SceneManager's tick
-const originalTick = manager._tick.bind(manager);
-manager._tick = function () {
-    manager.scene.traverse(obj => {
-        if (obj.userData?.targetScale !== undefined) {
-            const s = obj.scale.x;
-            const t = obj.userData.targetScale;
-            const delta = (t - s) * 0.1;
-            obj.scale.setScalar(s + delta);
-        }
-    });
-    originalTick();
-};

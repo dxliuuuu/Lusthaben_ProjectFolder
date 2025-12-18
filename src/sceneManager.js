@@ -47,7 +47,7 @@ export class SceneManager {
         // light 1
         this.lights.createSpotlight({
             color: 0xff0000,
-            intensity: 8000,
+            intensity: 9000,
             angle: 0.2,
             position: [10, 100, 30],
             target: [0, -40, -120],
@@ -59,7 +59,7 @@ export class SceneManager {
         // light 2
         this.lights.createSpotlight({
           color: 0xff0000,
-          intensity: 3000,
+          intensity: 4000,
           angle: 0.15,
           position: [10, 50, 30],
           target: [-60, 20, -150],
@@ -131,9 +131,9 @@ export class SceneManager {
 
         this.bloom = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            1.3,   // strength
-            0.5,   // radius
-            0.25   // threshold
+            0.8,   // strength
+            0.3,   // radius
+            0.55   // threshold
         );
 
         this.composer.addPass(this.bloom);

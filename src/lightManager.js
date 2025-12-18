@@ -24,7 +24,7 @@ export class LightManager {
         pulseAmount = 0.3
     }) {
 
-        const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+        const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.02 );
         this.scene.add(directionalLight);
 
         const light = new THREE.SpotLight(
